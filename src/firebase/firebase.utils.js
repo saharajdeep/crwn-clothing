@@ -2,27 +2,48 @@ import firebase from 'firebase/app';
 import 'firebase/firestore';
 import 'firebase/auth';
 
+const config = {
+  apiKey: 'AIzaSyCdHT-AYHXjF7wOrfAchX4PIm3cSj5tn14',
+  authDomain: 'crwn-db.firebaseapp.com',
+  databaseURL: 'https://crwn-db.firebaseio.com',
+  projectId: 'crwn-db',
+  storageBucket: 'crwn-db.appspot.com',
+  messagingSenderId: '850995411664',
+  appId: '1:850995411664:web:7ddc01d597846f65'
+};
 
-var firebaseConfig = {
-    apiKey: "AIzaSyDd-xdMNo1DLpsdzWoVWqAQRpBkE2K9VBg",
-    authDomain: "crwn-db-99032.firebaseapp.com",
-    databaseURL: "https://crwn-db-99032.firebaseio.com",
-    projectId: "crwn-db-99032",
-    storageBucket: "crwn-db-99032.appspot.com",
-    messagingSenderId: "721892232452",
-    appId: "1:721892232452:web:000c9e24d36d841bd41451",
-    measurementId: "G-N533LZTRFE"
-  };
+firebase.initializeApp(config);
 
+export const createUserProfileDocument = async (userAuth, additionalData) => {
+  if (!userAuth) return;
 
-  firebase.initializeApp(firebaseConfig);
+  const userRef = firestore.doc(`users/${userAuth.uid}`);
 
+  const snapShot = await userRef.get();
 
-  export const auth=firebase.auth();
-  export const firestore=firebase.firestore();
+  if (!snapShot.exists) {
+    const { displayName, email } = userAuth;
+    const createdAt = new Date();
+    try {
+      await userRef.set({
+        displayName,
+        email,
+        createdAt,
+        ...additionalData
+      });
+    } catch (error) {
+      console.log('error creating user', error.message);
+    }
+  }
 
-  const provider = new firebase.auth.GoogleAuthProvider();
-  provider.setCustomParameters({prompt:'select_account'});
-  export const signInWithGoogle =()=>auth.signInWithPopup(provider);
+  return userRef;
+};
 
-  export default firebase;
+export const auth = firebase.auth();
+export const firestore = firebase.firestore();
+
+const provider = new firebase.auth.GoogleAuthProvider();
+provider.setCustomParameters({ prompt: 'select_account' });
+export const signInWithGoogle = () => auth.signInWithPopup(provider);
+
+export default firebase;
